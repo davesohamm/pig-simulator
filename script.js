@@ -111,11 +111,9 @@ let loadedData = {
     movies: [...movieDataset]
 };
 
-// Track query state
-let queryState = {
-    lastLimit: null,
-    lastSort: null,
-    lastFilter: null
+// Store all variables created by user (tracks actual data)
+let variables = {
+    movies: [...movieDataset]
 };
 
 // Command history
@@ -188,6 +186,8 @@ function executeCommand(cmd) {
         appendOutput('\nGoodbye!', 'success');
         setTimeout(() => {
             outputDiv.innerHTML = '';
+            // Reset variables
+            variables = { movies: [...movieDataset] };
             displayBanner();
         }, 1500);
     } else if (lowerCmd.includes(' load ') || lowerCmd.startsWith('load ') || lowerCmd.includes('= load')) {
@@ -226,36 +226,240 @@ function executeCommand(cmd) {
 function handleLoadCommand(cmd) {
     appendOutput('2024-11-10 10:32:15,234 [main] INFO  org.apache.pig.backend.hadoop.executionengine.HExecutionEngine - Connecting to hadoop file system at: hdfs://localhost:9000', 'info');
     appendOutput('2024-11-10 10:32:15,567 [main] INFO  org.apache.pig.backend.hadoop.executionengine.HExecutionEngine - Successfully connected', 'info');
+    
+    // Parse LOAD command: varname = LOAD 'path' ...
+    const loadMatch = cmd.match(/(\w+)\s*=\s*load/i);
+    if (loadMatch) {
+        const varName = loadMatch[1];
+        // Load the movies dataset
+        variables[varName] = [...movieDataset];
+    }
+    
     appendOutput('OK\n', 'success');
 }
 
 function handleFilterCommand(cmd) {
     appendOutput('2024-11-10 10:32:16,123 [main] INFO  org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.MapReduceLauncher - Processing FILTER operation', 'info');
+    
+    // Parse FILTER command: varname = FILTER source BY condition
+    const filterMatch = cmd.match(/(\w+)\s*=\s*filter\s+(\w+)\s+by\s+(.+)/i);
+    if (filterMatch) {
+        const [, targetVar, sourceVar, condition] = filterMatch;
+        const sourceData = variables[sourceVar];
+        
+        if (!sourceData) {
+            appendOutput(`ERROR: Variable '${sourceVar}' not found\n`, 'error');
+            return;
+        }
+        
+        // Execute filter
+        const filtered = executeFilter(sourceData, condition);
+        variables[targetVar] = filtered;
+    }
+    
     appendOutput('OK\n', 'success');
+}
+
+function executeFilter(data, condition) {
+    // Parse condition and filter data
+    condition = condition.trim().replace(/;$/, '');
+    
+    // Handle different condition types
+    if (condition.includes(' AND ')) {
+        const parts = condition.split(' AND ');
+        return data.filter(row => {
+            return parts.every(part => evaluateCondition(row, part.trim()));
+        });
+    } else if (condition.includes(' OR ')) {
+        const parts = condition.split(' OR ');
+        return data.filter(row => {
+            return parts.some(part => evaluateCondition(row, part.trim()));
+        });
+    } else {
+        return data.filter(row => evaluateCondition(row, condition));
+    }
+}
+
+function evaluateCondition(row, condition) {
+    // Parse condition: field operator value
+    const operators = ['>=', '<=', '==', '!=', '>', '<'];
+    let operator = operators.find(op => condition.includes(op));
+    
+    if (!operator) return true;
+    
+    const parts = condition.split(operator).map(p => p.trim());
+    if (parts.length !== 2) return true;
+    
+    const field = parts[0];
+    let value = parts[1].replace(/'/g, '').replace(/"/g, '');
+    
+    // Get field value from row
+    const fieldValue = row[field];
+    if (fieldValue === undefined) return true;
+    
+    // Convert value to appropriate type
+    if (!isNaN(value) && value !== '') {
+        value = Number(value);
+    }
+    
+    // Evaluate condition
+    switch (operator) {
+        case '>=': return fieldValue >= value;
+        case '<=': return fieldValue <= value;
+        case '==': return fieldValue == value;
+        case '!=': return fieldValue != value;
+        case '>': return fieldValue > value;
+        case '<': return fieldValue < value;
+        default: return true;
+    }
 }
 
 function handleForeachCommand(cmd) {
     appendOutput('2024-11-10 10:32:16,456 [main] INFO  org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.MapReduceLauncher - Processing FOREACH operation', 'info');
+    
+    // Parse FOREACH command: varname = FOREACH source GENERATE fields
+    const foreachMatch = cmd.match(/(\w+)\s*=\s*foreach\s+(\w+)\s+generate\s+(.+)/i);
+    if (foreachMatch) {
+        const [, targetVar, sourceVar, fields] = foreachMatch;
+        const sourceData = variables[sourceVar];
+        
+        if (!sourceData) {
+            appendOutput(`ERROR: Variable '${sourceVar}' not found\n`, 'error');
+            return;
+        }
+        
+        // For now, handle common patterns
+        // Check if it's a GROUP aggregation
+        if (fields.toLowerCase().includes('count(') || fields.toLowerCase().includes('avg(') || fields.toLowerCase().includes('max(') || fields.toLowerCase().includes('min(')) {
+            // This is aggregation on grouped data
+            const result = executeForeachAggregation(sourceData, fields);
+            variables[targetVar] = result;
+        } else {
+            // Simple projection - just pass through (simplified)
+            variables[targetVar] = sourceData;
+        }
+    }
+    
     appendOutput('OK\n', 'success');
+}
+
+function executeForeachAggregation(groupedData, fields) {
+    // Parse aggregation fields
+    const result = [];
+    
+    groupedData.forEach(group => {
+        const row = {};
+        
+        // Extract group key
+        if (fields.toLowerCase().includes('group as') || fields.toLowerCase().includes('group,')) {
+            row.group = group.group;
+        }
+        
+        // Handle COUNT
+        if (fields.toLowerCase().includes('count(')) {
+            row.count = group.items.length;
+        }
+        
+        // Handle AVG
+        if (fields.toLowerCase().includes('avg(')) {
+            const match = fields.match(/avg\([^.]+\.(\w+)\)/i);
+            if (match && match[1]) {
+                const field = match[1];
+                const sum = group.items.reduce((acc, item) => acc + (item[field] || 0), 0);
+                row.avg_rating = (sum / group.items.length).toFixed(2);
+            }
+        }
+        
+        result.push(row);
+    });
+    
+    return result;
 }
 
 function handleGroupCommand(cmd) {
     appendOutput('2024-11-10 10:32:16,789 [main] INFO  org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.MapReduceLauncher - Processing GROUP operation', 'info');
+    
+    // Parse GROUP command: varname = GROUP source BY field
+    const groupMatch = cmd.match(/(\w+)\s*=\s*group\s+(\w+)\s+by\s+(\w+)/i);
+    if (groupMatch) {
+        const [, targetVar, sourceVar, field] = groupMatch;
+        const sourceData = variables[sourceVar];
+        
+        if (!sourceData) {
+            appendOutput(`ERROR: Variable '${sourceVar}' not found\n`, 'error');
+            return;
+        }
+        
+        // Execute GROUP BY
+        const grouped = {};
+        sourceData.forEach(row => {
+            const key = row[field];
+            if (!grouped[key]) {
+                grouped[key] = [];
+            }
+            grouped[key].push(row);
+        });
+        
+        // Convert to array format
+        const result = Object.keys(grouped).map(key => ({
+            group: key,
+            items: grouped[key]
+        }));
+        
+        variables[targetVar] = result;
+    }
+    
     appendOutput('OK\n', 'success');
 }
 
 function handleOrderCommand(cmd) {
     appendOutput('2024-11-10 10:32:17,012 [main] INFO  org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.MapReduceLauncher - Processing ORDER operation', 'info');
+    
+    // Parse ORDER command: varname = ORDER source BY field DESC/ASC
+    const orderMatch = cmd.match(/(\w+)\s*=\s*order\s+(\w+)\s+by\s+(\w+)\s*(desc|asc)?/i);
+    if (orderMatch) {
+        const [, targetVar, sourceVar, field, direction] = orderMatch;
+        const sourceData = variables[sourceVar];
+        
+        if (!sourceData) {
+            appendOutput(`ERROR: Variable '${sourceVar}' not found\n`, 'error');
+            return;
+        }
+        
+        // Sort the data
+        const sorted = [...sourceData].sort((a, b) => {
+            const aVal = a[field];
+            const bVal = b[field];
+            const isDesc = direction && direction.toLowerCase() === 'desc';
+            
+            if (aVal < bVal) return isDesc ? 1 : -1;
+            if (aVal > bVal) return isDesc ? -1 : 1;
+            return 0;
+        });
+        
+        variables[targetVar] = sorted;
+    }
+    
     appendOutput('OK\n', 'success');
 }
 
 function handleLimitCommand(cmd) {
-    // Extract limit value
-    const match = cmd.match(/limit\s+\w+\s+(\d+)/i);
-    if (match) {
-        queryState.lastLimit = parseInt(match[1]);
-    }
     appendOutput('2024-11-10 10:32:17,234 [main] INFO  org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.MapReduceLauncher - Processing LIMIT operation', 'info');
+    
+    // Parse LIMIT command: varname = LIMIT source number
+    const limitMatch = cmd.match(/(\w+)\s*=\s*limit\s+(\w+)\s+(\d+)/i);
+    if (limitMatch) {
+        const [, targetVar, sourceVar, limit] = limitMatch;
+        const sourceData = variables[sourceVar];
+        
+        if (!sourceData) {
+            appendOutput(`ERROR: Variable '${sourceVar}' not found\n`, 'error');
+            return;
+        }
+        
+        variables[targetVar] = sourceData.slice(0, parseInt(limit));
+    }
+    
     appendOutput('OK\n', 'success');
 }
 
@@ -267,7 +471,13 @@ function handleDumpCommand(cmd) {
         return;
     }
     
-    const varName = match[1].toLowerCase();
+    const varName = match[1];
+    
+    // Check if variable exists
+    if (!variables[varName]) {
+        appendOutput(`ERROR: Variable '${varName}' not found. Make sure you've loaded or created it first.\n`, 'error');
+        return;
+    }
     
     appendOutput('2024-11-10 10:32:17,567 [main] INFO  org.apache.pig.tools.pigstats.ScriptState - Pig script settings are added to the job', 'info');
     appendOutput('2024-11-10 10:32:17,789 [main] INFO  org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.JobControlCompiler - mapred.job.reduce.markreset.buffer.percent is not set, set to default 0.3', 'info');
@@ -278,125 +488,58 @@ function handleDumpCommand(cmd) {
     appendOutput('   PigVersion: 0.17.0', 'info');
     appendOutput('   Success!\n', 'info');
     
-    // Determine how many results to show
-    let defaultLimit = 15; // Show 15 by default for better demo
-    if (queryState.lastLimit) {
-        defaultLimit = queryState.lastLimit;
-        queryState.lastLimit = null; // Reset after use
-    }
+    // Get the actual data for this variable
+    const data = variables[varName];
     
-    // Display sample results based on variable name
-    if (varName.includes('movie') || varName === 'movies') {
-        displayMovieResults(loadedData.movies.slice(0, defaultLimit));
-    } else if (varName.includes('high')) {
-        const filtered = loadedData.movies.filter(m => m.rating >= 9.0);
-        displayMovieResults(filtered.slice(0, defaultLimit));
-    } else if (varName.includes('low')) {
-        const filtered = loadedData.movies.filter(m => m.rating < 8.0);
-        displayMovieResults(filtered.slice(0, defaultLimit));
-    } else if (varName.includes('action')) {
-        const filtered = loadedData.movies.filter(m => m.genre.toLowerCase() === 'action');
-        displayMovieResults(filtered.slice(0, defaultLimit));
-    } else if (varName.includes('drama')) {
-        const filtered = loadedData.movies.filter(m => m.genre.toLowerCase() === 'drama');
-        displayMovieResults(filtered.slice(0, defaultLimit));
-    } else if (varName.includes('scifi') || varName.includes('sci_fi') || varName.includes('sci-fi')) {
-        const filtered = loadedData.movies.filter(m => m.genre.toLowerCase() === 'sci-fi');
-        displayMovieResults(filtered.slice(0, defaultLimit));
-    } else if (varName.includes('genre') || varName.includes('group')) {
-        displayGenreGroup();
-    } else if (varName.includes('year')) {
-        displayYearGroup();
-    } else if (varName.includes('director')) {
-        displayDirectorResults();
-    } else if (varName.includes('nolan')) {
-        const filtered = loadedData.movies.filter(m => m.director.toLowerCase().includes('nolan'));
-        displayMovieResults(filtered.slice(0, defaultLimit));
-    } else if (varName.includes('sorted') || varName.includes('order')) {
-        // For sorted results, show based on variable name patterns
-        if (varName.includes('rating')) {
-            const sorted = [...loadedData.movies].sort((a, b) => b.rating - a.rating);
-            displayMovieResults(sorted.slice(0, defaultLimit));
-        } else if (varName.includes('revenue')) {
-            const sorted = [...loadedData.movies].sort((a, b) => b.revenue - a.revenue);
-            displayRevenueResults(sorted.slice(0, defaultLimit));
-        } else if (varName.includes('year')) {
-            const sorted = [...loadedData.movies].sort((a, b) => b.year - a.year);
-            displayMovieResults(sorted.slice(0, defaultLimit));
-        } else {
-            displayMovieResults(loadedData.movies.slice(0, defaultLimit));
-        }
-    } else if (varName.includes('revenue') || varName.includes('top')) {
-        const sorted = [...loadedData.movies].sort((a, b) => b.revenue - a.revenue);
-        displayRevenueResults(sorted.slice(0, defaultLimit));
-    } else if (varName.includes('limit') || varName.includes('first') || varName.includes('sample')) {
-        displayMovieResults(loadedData.movies.slice(0, defaultLimit));
+    // Check if it's grouped data
+    if (varName.toLowerCase().includes('group') || (Array.isArray(data) && data.length > 0 && data[0].group !== undefined)) {
+        // This is grouped data - display differently
+        displayGroupedResults(data);
     } else {
-        // Default: show reasonable number of results
-        displayMovieResults(loadedData.movies.slice(0, defaultLimit));
+        // Regular movie data
+        displayMovieResults(data);
     }
 }
 
 function displayMovieResults(movies) {
+    if (!Array.isArray(movies) || movies.length === 0) {
+        appendOutput('(No results)\n', 'result-table');
+        return;
+    }
+    
     movies.forEach(movie => {
-        appendOutput(`(${movie.id},${movie.title},${movie.year},${movie.rating},${movie.genre},${movie.director},${movie.revenue})`, 'result-table');
-    });
-    appendOutput('');
-}
-
-function displayGenreGroup() {
-    const genreMap = {};
-    loadedData.movies.forEach(movie => {
-        if (!genreMap[movie.genre]) {
-            genreMap[movie.genre] = [];
+        // Check if it's a full movie record or just selected fields
+        if (movie.id !== undefined && movie.title !== undefined) {
+            appendOutput(`(${movie.id},${movie.title},${movie.year},${movie.rating},${movie.genre},${movie.director},${movie.revenue})`, 'result-table');
+        } else {
+            // Custom format for other data
+            const values = Object.values(movie).join(',');
+            appendOutput(`(${values})`, 'result-table');
         }
-        genreMap[movie.genre].push(movie);
-    });
-    
-    Object.keys(genreMap).sort().forEach(genre => {
-        const count = genreMap[genre].length;
-        const avgRating = (genreMap[genre].reduce((sum, m) => sum + m.rating, 0) / count).toFixed(2);
-        appendOutput(`(${genre},${count},${avgRating})`, 'result-table');
     });
     appendOutput('');
 }
 
-function displayYearGroup() {
-    const yearMap = {};
-    loadedData.movies.forEach(movie => {
-        if (!yearMap[movie.year]) {
-            yearMap[movie.year] = [];
+function displayGroupedResults(groupedData) {
+    if (!Array.isArray(groupedData) || groupedData.length === 0) {
+        appendOutput('(No results)\n', 'result-table');
+        return;
+    }
+    
+    groupedData.forEach(row => {
+        // Check if it's aggregated or raw grouped data
+        if (row.count !== undefined || row.avg_rating !== undefined) {
+            // Aggregated data
+            const values = Object.values(row).join(',');
+            appendOutput(`(${values})`, 'result-table');
+        } else if (row.group !== undefined && row.items !== undefined) {
+            // Raw grouped data
+            appendOutput(`(${row.group},{...${row.items.length} items...})`, 'result-table');
+        } else {
+            // Generic output
+            const values = Object.values(row).join(',');
+            appendOutput(`(${values})`, 'result-table');
         }
-        yearMap[movie.year].push(movie);
-    });
-    
-    Object.keys(yearMap).sort().forEach(year => {
-        const count = yearMap[year].length;
-        appendOutput(`(${year},${count})`, 'result-table');
-    });
-    appendOutput('');
-}
-
-function displayDirectorResults() {
-    const directorMap = {};
-    loadedData.movies.forEach(movie => {
-        if (!directorMap[movie.director]) {
-            directorMap[movie.director] = 0;
-        }
-        directorMap[movie.director]++;
-    });
-    
-    Object.entries(directorMap)
-        .sort((a, b) => b[1] - a[1])
-        .forEach(([director, count]) => {
-            appendOutput(`(${director},${count})`, 'result-table');
-        });
-    appendOutput('');
-}
-
-function displayRevenueResults(movies) {
-    movies.forEach(movie => {
-        appendOutput(`(${movie.title},${movie.revenue})`, 'result-table');
     });
     appendOutput('');
 }
@@ -413,13 +556,94 @@ function handleDescribeCommand(cmd) {
 }
 
 function handleIllustrateCommand(cmd) {
-    appendOutput('2024-11-10 10:32:19,123 [main] INFO  org.apache.pig.tools.pigstats.ScriptState - Pig Features used in the script: UNKNOWN', 'info');
-    appendOutput('---------------------------------------------------------------------', 'result-table');
-    appendOutput('| movies     | id:int | title:chararray           | year:int | rating:double | genre:chararray | director:chararray       | revenue:long |', 'result-table');
-    appendOutput('---------------------------------------------------------------------', 'result-table');
-    appendOutput('|            | 1      | The Shawshank Redemption  | 1994     | 9.3           | Drama          | Frank Darabont          | 28341469     |', 'result-table');
-    appendOutput('|            | 3      | The Dark Knight           | 2008     | 9.0           | Action         | Christopher Nolan       | 534858444    |', 'result-table');
-    appendOutput('---------------------------------------------------------------------\n', 'result-table');
+    // Parse ILLUSTRATE command: ILLUSTRATE varname;
+    const match = cmd.match(/illustrate\s+(\w+)/i);
+    if (!match) {
+        appendOutput('ERROR: Invalid ILLUSTRATE syntax. Usage: ILLUSTRATE variable_name;', 'error');
+        return;
+    }
+    
+    const varName = match[1];
+    
+    // Check if variable exists
+    if (!variables[varName]) {
+        appendOutput(`ERROR: Variable '${varName}' not found. Make sure you've created it first.\n`, 'error');
+        return;
+    }
+    
+    appendOutput('2024-11-10 10:32:19,123 [main] INFO  org.apache.pig.tools.pigstats.ScriptState - Pig Features used in the script: FILTER, ORDER, etc.', 'info');
+    appendOutput('', 'info');
+    
+    const data = variables[varName];
+    
+    // Show schema and sample data
+    if (Array.isArray(data) && data.length > 0) {
+        const sample = data.slice(0, 3); // Show first 3 records
+        
+        appendOutput('-------------------------------------------------------------------------------------------------------', 'result-table');
+        
+        // Check if it's regular movie data or grouped/aggregated data
+        if (sample[0].id !== undefined && sample[0].title !== undefined) {
+            // Regular movie data
+            appendOutput(`| ${varName.padEnd(15)} | id | title                     | year | rating | genre      | director              | revenue   |`, 'result-table');
+            appendOutput('-------------------------------------------------------------------------------------------------------', 'result-table');
+            
+            sample.forEach(movie => {
+                const titleTrunc = movie.title.length > 25 ? movie.title.substring(0, 22) + '...' : movie.title.padEnd(25);
+                const genreTrunc = movie.genre.length > 10 ? movie.genre.substring(0, 10) : movie.genre.padEnd(10);
+                const directorTrunc = movie.director.length > 20 ? movie.director.substring(0, 17) + '...' : movie.director.padEnd(20);
+                
+                appendOutput(
+                    `| ${' '.padEnd(15)} | ${String(movie.id).padEnd(2)} | ${titleTrunc} | ${String(movie.year).padEnd(4)} | ${String(movie.rating).padEnd(6)} | ${genreTrunc} | ${directorTrunc} | ${String(movie.revenue).padEnd(9)} |`,
+                    'result-table'
+                );
+            });
+        } else if (sample[0].group !== undefined) {
+            // Grouped or aggregated data
+            const firstRow = sample[0];
+            const keys = Object.keys(firstRow);
+            
+            // Header
+            const header = '| ' + varName.padEnd(15) + ' | ' + keys.map(k => k.padEnd(20)).join(' | ') + ' |';
+            appendOutput(header, 'result-table');
+            appendOutput('-------------------------------------------------------------------------------------------------------', 'result-table');
+            
+            // Data rows
+            sample.forEach(row => {
+                const values = keys.map(key => {
+                    const val = row[key];
+                    if (Array.isArray(val)) {
+                        return `{${val.length} items}`.padEnd(20);
+                    } else if (typeof val === 'object' && val !== null) {
+                        return '{...}'.padEnd(20);
+                    } else {
+                        return String(val).substring(0, 20).padEnd(20);
+                    }
+                });
+                appendOutput(`| ${' '.padEnd(15)} | ${values.join(' | ')} |`, 'result-table');
+            });
+        } else {
+            // Generic data format
+            const firstRow = sample[0];
+            const keys = Object.keys(firstRow);
+            
+            // Header
+            const header = '| ' + varName.padEnd(15) + ' | ' + keys.map(k => k.padEnd(15)).join(' | ') + ' |';
+            appendOutput(header, 'result-table');
+            appendOutput('-------------------------------------------------------------------------------------------------------', 'result-table');
+            
+            // Data rows
+            sample.forEach(row => {
+                const values = keys.map(key => String(row[key] || '').substring(0, 15).padEnd(15));
+                appendOutput(`| ${' '.padEnd(15)} | ${values.join(' | ')} |`, 'result-table');
+            });
+        }
+        
+        appendOutput('-------------------------------------------------------------------------------------------------------', 'result-table');
+        appendOutput(`\nShowing ${sample.length} of ${data.length} total records in ${varName}\n`, 'info');
+    } else {
+        appendOutput(`Variable ${varName} contains no data or is empty.\n`, 'warning');
+    }
 }
 
 function handleStoreCommand(cmd) {
@@ -476,32 +700,41 @@ Example Pig Latin Queries (use with movie dataset):
 
 1. Load movies dataset:
    movies = LOAD '/data/movies.txt' USING PigStorage(',') AS (id:int, title:chararray, year:int, rating:double, genre:chararray, director:chararray, revenue:long);
+   ILLUSTRATE movies;
 
 2. Filter high-rated movies:
    high_rated = FILTER movies BY rating >= 9.0;
+   ILLUSTRATE high_rated;
    DUMP high_rated;
 
-3. Project specific columns:
-   titles_years = FOREACH movies GENERATE title, year, rating;
-   DUMP titles_years;
+3. Filter by genre:
+   action_movies = FILTER movies BY genre == 'Action';
+   ILLUSTRATE action_movies;
+   DUMP action_movies;
 
-4. Group by genre:
+4. Group by genre with stats:
    genre_group = GROUP movies BY genre;
    genre_stats = FOREACH genre_group GENERATE group, COUNT(movies), AVG(movies.rating);
+   ILLUSTRATE genre_stats;
    DUMP genre_stats;
 
-5. Order by revenue:
+5. Order by revenue (Top 5):
    top_revenue = ORDER movies BY revenue DESC;
    top_5 = LIMIT top_revenue 5;
+   ILLUSTRATE top_5;
    DUMP top_5;
 
-6. Count movies by director:
-   director_group = GROUP movies BY director;
-   director_count = FOREACH director_group GENERATE group, COUNT(movies);
-   DUMP director_count;
+6. Complex query (Nolan movies):
+   nolan_movies = FILTER movies BY director == 'Christopher Nolan';
+   sorted_nolan = ORDER nolan_movies BY rating DESC;
+   ILLUSTRATE sorted_nolan;
+   DUMP sorted_nolan;
 
 7. Store results:
    STORE high_rated INTO '/output/high_rated_movies' USING PigStorage(',');
+
+Pro Tip: Use ILLUSTRATE to preview data (shows 3 samples)
+         Use DUMP to see all results
 
 Type any of these commands to see realistic Pig output!
 `;

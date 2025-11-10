@@ -29,6 +29,12 @@ DUMP movies;
 DESCRIBE movies;
 ```
 
+### 4. Illustrate Variable Data
+```pig
+ILLUSTRATE movies;
+```
+**Shows sample data (first 3 records) from the variable in a table format**
+
 ---
 
 ## Filtering Operations
@@ -36,8 +42,10 @@ DESCRIBE movies;
 ### Filter High-Rated Movies (Rating >= 9.0)
 ```pig
 high_rated = FILTER movies BY rating >= 9.0;
+ILLUSTRATE high_rated;
 DUMP high_rated;
 ```
+**Use ILLUSTRATE to preview sample data before dumping all results**
 
 ### Filter Movies by Genre
 ```pig
@@ -208,6 +216,64 @@ directors = FOREACH movies GENERATE director;
 unique_directors = DISTINCT directors;
 DUMP unique_directors;
 ```
+
+---
+
+## Illustrate Operations
+
+### Illustrate Basic Data
+```pig
+movies = LOAD '/data/movies.txt' USING PigStorage(',') AS (id:int, title:chararray, year:int, rating:double, genre:chararray, director:chararray, revenue:long);
+ILLUSTRATE movies;
+```
+**Shows first 3 sample records in a formatted table**
+
+### Illustrate Filtered Data
+```pig
+action_movies = FILTER movies BY genre == 'Action';
+ILLUSTRATE action_movies;
+```
+**Shows sample Action movies to verify filter worked correctly**
+
+### Illustrate Sorted Data
+```pig
+sorted_by_rating = ORDER movies BY rating DESC;
+ILLUSTRATE sorted_by_rating;
+```
+**Shows top 3 movies to verify sorting is correct**
+
+### Illustrate Limited Data
+```pig
+top_rated = ORDER movies BY rating DESC;
+top_5 = LIMIT top_rated 5;
+ILLUSTRATE top_5;
+```
+**Shows sample of limited results**
+
+### Illustrate Grouped Data
+```pig
+genre_group = GROUP movies BY genre;
+ILLUSTRATE genre_group;
+```
+**Shows sample grouped data structure**
+
+### Illustrate Aggregated Data
+```pig
+genre_group = GROUP movies BY genre;
+genre_stats = FOREACH genre_group GENERATE group AS genre, COUNT(movies) AS count, AVG(movies.rating) AS avg_rating;
+ILLUSTRATE genre_stats;
+```
+**Shows sample aggregated statistics to verify calculations**
+
+### Illustrate Complex Query Results
+```pig
+nolan_movies = FILTER movies BY director == 'Christopher Nolan';
+sorted_nolan = ORDER nolan_movies BY rating DESC;
+ILLUSTRATE sorted_nolan;
+```
+**Use ILLUSTRATE at any step to debug your query pipeline**
+
+**Pro Tip:** Use ILLUSTRATE instead of DUMP when you want to quickly preview data without scrolling through hundreds of rows!
 
 ---
 
