@@ -1,25 +1,121 @@
 // Fake Movie Dataset
 const movieDataset = [
-    { id: 1, title: "The Shawshank Redemption", year: 1994, rating: 9.3, genre: "Drama", director: "Frank Darabont", revenue: 28341469 },
-    { id: 2, title: "The Godfather", year: 1972, rating: 9.2, genre: "Crime", director: "Francis Ford Coppola", revenue: 134966411 },
-    { id: 3, title: "The Dark Knight", year: 2008, rating: 9.0, genre: "Action", director: "Christopher Nolan", revenue: 534858444 },
-    { id: 4, title: "Pulp Fiction", year: 1994, rating: 8.9, genre: "Crime", director: "Quentin Tarantino", revenue: 107928762 },
-    { id: 5, title: "Forrest Gump", year: 1994, rating: 8.8, genre: "Drama", director: "Robert Zemeckis", revenue: 330252182 },
-    { id: 6, title: "Inception", year: 2010, rating: 8.8, genre: "Sci-Fi", director: "Christopher Nolan", revenue: 292576195 },
-    { id: 7, title: "The Matrix", year: 1999, rating: 8.7, genre: "Sci-Fi", director: "Lana Wachowski", revenue: 171479930 },
-    { id: 8, title: "Goodfellas", year: 1990, rating: 8.7, genre: "Crime", director: "Martin Scorsese", revenue: 46836394 },
-    { id: 9, title: "Interstellar", year: 2014, rating: 8.6, genre: "Sci-Fi", director: "Christopher Nolan", revenue: 188020017 },
-    { id: 10, title: "The Silence of the Lambs", year: 1991, rating: 8.6, genre: "Thriller", director: "Jonathan Demme", revenue: 130742922 },
-    { id: 11, title: "Saving Private Ryan", year: 1998, rating: 8.6, genre: "War", director: "Steven Spielberg", revenue: 216540909 },
-    { id: 12, title: "The Green Mile", year: 1999, rating: 8.6, genre: "Drama", director: "Frank Darabont", revenue: 136801374 },
-    { id: 13, title: "Gladiator", year: 2000, rating: 8.5, genre: "Action", director: "Ridley Scott", revenue: 187705427 },
-    { id: 14, title: "The Departed", year: 2006, rating: 8.5, genre: "Crime", director: "Martin Scorsese", revenue: 132384315 },
-    { id: 15, title: "The Prestige", year: 2006, rating: 8.5, genre: "Drama", director: "Christopher Nolan", revenue: 53089891 },
+        { id: 1, title: "The Shawshank Redemption", year: 1994, rating: 9.3, genre: "Drama", director: "Frank Darabont", revenue: 28341469 },
+        { id: 2, title: "The Godfather", year: 1972, rating: 9.2, genre: "Crime", director: "Francis Ford Coppola", revenue: 134966411 },
+        { id: 3, title: "The Dark Knight", year: 2008, rating: 9.0, genre: "Action", director: "Christopher Nolan", revenue: 534858444 },
+        { id: 4, title: "Pulp Fiction", year: 1994, rating: 8.9, genre: "Crime", director: "Quentin Tarantino", revenue: 107928762 },
+        { id: 5, title: "Forrest Gump", year: 1994, rating: 8.8, genre: "Drama", director: "Robert Zemeckis", revenue: 330252182 },
+        { id: 6, title: "Inception", year: 2010, rating: 8.8, genre: "Sci-Fi", director: "Christopher Nolan", revenue: 292576195 },
+        { id: 7, title: "The Matrix", year: 1999, rating: 8.7, genre: "Sci-Fi", director: "Lana Wachowski", revenue: 171479930 },
+        { id: 8, title: "Goodfellas", year: 1990, rating: 8.7, genre: "Crime", director: "Martin Scorsese", revenue: 46836394 },
+        { id: 9, title: "Interstellar", year: 2014, rating: 8.6, genre: "Sci-Fi", director: "Christopher Nolan", revenue: 188020017 },
+        { id: 10, title: "The Silence of the Lambs", year: 1991, rating: 8.6, genre: "Thriller", director: "Jonathan Demme", revenue: 130742922 },
+        { id: 11, title: "Saving Private Ryan", year: 1998, rating: 8.6, genre: "War", director: "Steven Spielberg", revenue: 216540909 },
+        { id: 12, title: "The Green Mile", year: 1999, rating: 8.6, genre: "Drama", director: "Frank Darabont", revenue: 136801374 },
+        { id: 13, title: "Gladiator", year: 2000, rating: 8.5, genre: "Action", director: "Ridley Scott", revenue: 187705427 },
+        { id: 14, title: "The Departed", year: 2006, rating: 8.5, genre: "Crime", director: "Martin Scorsese", revenue: 132384315 },
+        { id: 15, title: "The Prestige", year: 2006, rating: 8.5, genre: "Drama", director: "Christopher Nolan", revenue: 53089891 },
+    
+        { id: 16, title: "Avatar", year: 2009, rating: 7.8, genre: "Sci-Fi", director: "James Cameron", revenue: 760507625 },
+        { id: 17, title: "Titanic", year: 1997, rating: 7.9, genre: "Romance", director: "James Cameron", revenue: 659363944 },
+        { id: 18, title: "Avengers: Endgame", year: 2019, rating: 8.4, genre: "Action", director: "Anthony Russo", revenue: 858373000 },
+        { id: 19, title: "Avengers: Infinity War", year: 2018, rating: 8.4, genre: "Action", director: "Anthony Russo", revenue: 678815482 },
+        { id: 20, title: "Jurassic Park", year: 1993, rating: 8.1, genre: "Adventure", director: "Steven Spielberg", revenue: 402348343 },
+        { id: 21, title: "Star Wars: A New Hope", year: 1977, rating: 8.6, genre: "Sci-Fi", director: "George Lucas", revenue: 307263857 },
+        { id: 22, title: "The Lord of the Rings: The Fellowship of the Ring", year: 2001, rating: 8.8, genre: "Fantasy", director: "Peter Jackson", revenue: 315710750 },
+        { id: 23, title: "The Lord of the Rings: The Two Towers", year: 2002, rating: 8.7, genre: "Fantasy", director: "Peter Jackson", revenue: 342551365 },
+        { id: 24, title: "The Lord of the Rings: The Return of the King", year: 2003, rating: 8.9, genre: "Fantasy", director: "Peter Jackson", revenue: 377845905 },
+        { id: 25, title: "Fight Club", year: 1999, rating: 8.8, genre: "Drama", director: "David Fincher", revenue: 100853753 },
+        { id: 26, title: "The Social Network", year: 2010, rating: 7.7, genre: "Drama", director: "David Fincher", revenue: 224920315 },
+        { id: 27, title: "Whiplash", year: 2014, rating: 8.5, genre: "Drama", director: "Damien Chazelle", revenue: 48982041 },
+        { id: 28, title: "The Wolf of Wall Street", year: 2013, rating: 8.2, genre: "Biography", director: "Martin Scorsese", revenue: 406900694 },
+        { id: 29, title: "Mad Max: Fury Road", year: 2015, rating: 8.1, genre: "Action", director: "George Miller", revenue: 375209406 },
+        { id: 30, title: "Parasite", year: 2019, rating: 8.6, genre: "Thriller", director: "Bong Joon Ho", revenue: 258708050 },
+        { id: 31, title: "Joker", year: 2019, rating: 8.4, genre: "Crime", director: "Todd Phillips", revenue: 1074251311 },
+        { id: 32, title: "The Pianist", year: 2002, rating: 8.5, genre: "Biography", director: "Roman Polanski", revenue: 32572529 },
+        { id: 33, title: "Schindler's List", year: 1993, rating: 9.0, genre: "Biography", director: "Steven Spielberg", revenue: 322161245 },
+        { id: 34, title: "Se7en", year: 1995, rating: 8.6, genre: "Thriller", director: "David Fincher", revenue: 327311859 },
+        { id: 35, title: "Django Unchained", year: 2012, rating: 8.4, genre: "Western", director: "Quentin Tarantino", revenue: 425368238 },
+        { id: 36, title: "Inglourious Basterds", year: 2009, rating: 8.3, genre: "War", director: "Quentin Tarantino", revenue: 321455689 },
+        { id: 37, title: "The Lion King", year: 1994, rating: 8.5, genre: "Animation", director: "Roger Allers", revenue: 422783777 },
+        { id: 38, title: "Toy Story", year: 1995, rating: 8.3, genre: "Animation", director: "John Lasseter", revenue: 373554033 },
+        { id: 39, title: "Finding Nemo", year: 2003, rating: 8.1, genre: "Animation", director: "Andrew Stanton", revenue: 940335536 },
+        { id: 40, title: "Up", year: 2009, rating: 8.2, genre: "Animation", director: "Pete Docter", revenue: 735099082 },
+        { id: 41, title: "WALL-E", year: 2008, rating: 8.4, genre: "Animation", director: "Andrew Stanton", revenue: 521311860 },
+        { id: 42, title: "Coco", year: 2017, rating: 8.4, genre: "Animation", director: "Lee Unkrich", revenue: 807082196 },
+        { id: 43, title: "Inside Out", year: 2015, rating: 8.1, genre: "Animation", director: "Pete Docter", revenue: 857611174 },
+        { id: 44, title: "The Truman Show", year: 1998, rating: 8.2, genre: "Drama", director: "Peter Weir", revenue: 264118201 },
+        { id: 45, title: "The Big Short", year: 2015, rating: 7.8, genre: "Drama", director: "Adam McKay", revenue: 133440870 },
+        { id: 46, title: "The Grand Budapest Hotel", year: 2014, rating: 8.1, genre: "Comedy", director: "Wes Anderson", revenue: 174600318 },
+        { id: 47, title: "The Revenant", year: 2015, rating: 8.0, genre: "Adventure", director: "Alejandro G. Iñárritu", revenue: 533000000 },
+        { id: 48, title: "La La Land", year: 2016, rating: 8.0, genre: "Romance", director: "Damien Chazelle", revenue: 446486916 },
+        { id: 49, title: "Blade Runner 2049", year: 2017, rating: 8.0, genre: "Sci-Fi", director: "Denis Villeneuve", revenue: 259239658 },
+        { id: 50, title: "Arrival", year: 2016, rating: 7.9, genre: "Sci-Fi", director: "Denis Villeneuve", revenue: 203388186 },
+        { id: 51, title: "Dune", year: 2021, rating: 8.0, genre: "Sci-Fi", director: "Denis Villeneuve", revenue: 402027830 },
+        { id: 52, title: "The Martian", year: 2015, rating: 8.0, genre: "Sci-Fi", director: "Ridley Scott", revenue: 630161890 },
+        { id: 53, title: "Gravity", year: 2013, rating: 7.7, genre: "Sci-Fi", director: "Alfonso Cuarón", revenue: 723192705 },
+        { id: 54, title: "The Terminator", year: 1984, rating: 8.1, genre: "Action", director: "James Cameron", revenue: 78371200 },
+        { id: 55, title: "Terminator 2: Judgment Day", year: 1991, rating: 8.5, genre: "Action", director: "James Cameron", revenue: 520881154 },
+        { id: 56, title: "Alien", year: 1979, rating: 8.4, genre: "Sci-Fi", director: "Ridley Scott", revenue: 106285522 },
+        { id: 57, title: "Aliens", year: 1986, rating: 8.4, genre: "Sci-Fi", director: "James Cameron", revenue: 183316455 },
+        { id: 58, title: "The Godfather Part II", year: 1974, rating: 9.0, genre: "Crime", director: "Francis Ford Coppola", revenue: 57300000 },
+        { id: 59, title: "The Irishman", year: 2019, rating: 7.8, genre: "Crime", director: "Martin Scorsese", revenue: 80000000 },
+        { id: 60, title: "No Country for Old Men", year: 2007, rating: 8.2, genre: "Crime", director: "Ethan Coen", revenue: 171627166 },
+        { id: 61, title: "The Hurt Locker", year: 2008, rating: 7.5, genre: "War", director: "Kathryn Bigelow", revenue: 49831222 },
+        { id: 62, title: "Black Panther", year: 2018, rating: 7.3, genre: "Action", director: "Ryan Coogler", revenue: 1346913161 },
+        { id: 63, title: "Spider-Man: Into the Spider-Verse", year: 2018, rating: 8.4, genre: "Animation", director: "Peter Ramsey", revenue: 375540831 },
+        { id: 64, title: "Guardians of the Galaxy", year: 2014, rating: 8.0, genre: "Action", director: "James Gunn", revenue: 773328629 },
+        { id: 65, title: "Oppenheimer", year: 2023, rating: 8.6, genre: "Biography", director: "Christopher Nolan", revenue: 970000000 },
+        { id: 66, title: "Barbie", year: 2023, rating: 7.1, genre: "Comedy", director: "Greta Gerwig", revenue: 1446000000 },
+        { id: 67, title: "The Shape of Water", year: 2017, rating: 7.3, genre: "Fantasy", director: "Guillermo del Toro", revenue: 195300000 },
+        { id: 68, title: "The King's Speech", year: 2010, rating: 8.0, genre: "Drama", director: "Tom Hooper", revenue: 484600000 },
+        { id: 69, title: "Spotlight", year: 2015, rating: 8.1, genre: "Drama", director: "Tom McCarthy", revenue: 98660000 },
+        { id: 70, title: "Shutter Island", year: 2010, rating: 8.2, genre: "Thriller", director: "Martin Scorsese", revenue: 294804195 },
+        { id: 71, title: "The Usual Suspects", year: 1995, rating: 8.5, genre: "Crime", director: "Bryan Singer", revenue: 34600000 },
+        { id: 72, title: "American Beauty", year: 1999, rating: 8.3, genre: "Drama", director: "Sam Mendes", revenue: 356296601 },
+        { id: 73, title: "Memento", year: 2000, rating: 8.4, genre: "Thriller", director: "Christopher Nolan", revenue: 39966648 },
+        { id: 74, title: "Oldboy", year: 2003, rating: 8.4, genre: "Thriller", director: "Park Chan-wook", revenue: 15000000 },
+        { id: 75, title: "Spirited Away", year: 2001, rating: 8.6, genre: "Animation", director: "Hayao Miyazaki", revenue: 395800000 },
+        { id: 76, title: "Howl's Moving Castle", year: 2004, rating: 8.2, genre: "Animation", director: "Hayao Miyazaki", revenue: 236700000 },
+        { id: 77, title: "Your Name", year: 2016, rating: 8.4, genre: "Animation", director: "Makoto Shinkai", revenue: 358000000 },
+        { id: 78, title: "Princess Mononoke", year: 1997, rating: 8.4, genre: "Animation", director: "Hayao Miyazaki", revenue: 169785000 },
+        { id: 79, title: "The Iron Giant", year: 1999, rating: 8.1, genre: "Animation", director: "Brad Bird", revenue: 31000000 },
+        { id: 80, title: "Ratatouille", year: 2007, rating: 8.1, genre: "Animation", director: "Brad Bird", revenue: 623726085 },
+        { id: 81, title: "Monsters, Inc.", year: 2001, rating: 8.1, genre: "Animation", director: "Pete Docter", revenue: 577425554 },
+        { id: 82, title: "The Incredibles", year: 2004, rating: 8.0, genre: "Animation", director: "Brad Bird", revenue: 631441092 },
+        { id: 83, title: "Frozen", year: 2013, rating: 7.9, genre: "Animation", director: "Jennifer Lee", revenue: 1280000000 },
+        { id: 84, title: "Moana", year: 2016, rating: 7.6, genre: "Animation", director: "Ron Clements", revenue: 687229889 },
+        { id: 85, title: "Zootopia", year: 2016, rating: 8.0, genre: "Animation", director: "Rich Moore", revenue: 1023784195 },
+    
+        // Bollywood Starts
+        { id: 86, title: "3 Idiots", year: 2009, rating: 8.4, genre: "Comedy", director: "Rajkumar Hirani", revenue: 459000000 },
+        { id: 87, title: "Dangal", year: 2016, rating: 8.4, genre: "Biography", director: "Nitesh Tiwari", revenue: 2100000000 },
+        { id: 88, title: "PK", year: 2014, rating: 8.1, genre: "Comedy", director: "Rajkumar Hirani", revenue: 854000000 },
+        { id: 89, title: "Lagaan", year: 2001, rating: 8.1, genre: "Drama", director: "Ashutosh Gowariker", revenue: 615000000 },
+        { id: 90, title: "Sholay", year: 1975, rating: 8.2, genre: "Action", director: "Ramesh Sippy", revenue: 300000000 },
+        { id: 91, title: "Dilwale Dulhania Le Jayenge", year: 1995, rating: 8.0, genre: "Romance", director: "Aditya Chopra", revenue: 2000000000 },
+        { id: 92, title: "Taare Zameen Par", year: 2007, rating: 8.3, genre: "Drama", director: "Aamir Khan", revenue: 610000000 },
+        { id: 93, title: "Barfi!", year: 2012, rating: 8.1, genre: "Romance", director: "Anurag Basu", revenue: 175000000 },
+        { id: 94, title: "Queen", year: 2013, rating: 8.1, genre: "Drama", director: "Vikas Bahl", revenue: 97000000 },
+        { id: 95, title: "Kahaani", year: 2012, rating: 8.1, genre: "Thriller", director: "Sujoy Ghosh", revenue: 104000000 },
+        { id: 96, title: "Andhadhun", year: 2018, rating: 8.2, genre: "Thriller", director: "Sriram Raghavan", revenue: 456000000 },
+        { id: 97, title: "Drishyam", year: 2015, rating: 8.3, genre: "Thriller", director: "Nishikant Kamat", revenue: 140000000 },
+        { id: 98, title: "Gully Boy", year: 2019, rating: 7.9, genre: "Drama", director: "Zoya Akhtar", revenue: 238000000 },
+        { id: 99, title: "Zindagi Na Milegi Dobara", year: 2011, rating: 8.1, genre: "Drama", director: "Zoya Akhtar", revenue: 150000000 },
+        { id: 100, title: "Chak De! India", year: 2007, rating: 8.1, genre: "Sports", director: "Shimit Amin", revenue: 108000000 }
+        
 ];
 
 // Store loaded datasets
 let loadedData = {
     movies: [...movieDataset]
+};
+
+// Track query state
+let queryState = {
+    lastLimit: null,
+    lastSort: null,
+    lastFilter: null
 };
 
 // Command history
@@ -154,6 +250,11 @@ function handleOrderCommand(cmd) {
 }
 
 function handleLimitCommand(cmd) {
+    // Extract limit value
+    const match = cmd.match(/limit\s+\w+\s+(\d+)/i);
+    if (match) {
+        queryState.lastLimit = parseInt(match[1]);
+    }
     appendOutput('2024-11-10 10:32:17,234 [main] INFO  org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.MapReduceLauncher - Processing LIMIT operation', 'info');
     appendOutput('OK\n', 'success');
 }
@@ -177,23 +278,62 @@ function handleDumpCommand(cmd) {
     appendOutput('   PigVersion: 0.17.0', 'info');
     appendOutput('   Success!\n', 'info');
     
+    // Determine how many results to show
+    let defaultLimit = 15; // Show 15 by default for better demo
+    if (queryState.lastLimit) {
+        defaultLimit = queryState.lastLimit;
+        queryState.lastLimit = null; // Reset after use
+    }
+    
     // Display sample results based on variable name
     if (varName.includes('movie') || varName === 'movies') {
-        displayMovieResults(loadedData.movies.slice(0, 10));
+        displayMovieResults(loadedData.movies.slice(0, defaultLimit));
     } else if (varName.includes('high')) {
         const filtered = loadedData.movies.filter(m => m.rating >= 9.0);
-        displayMovieResults(filtered);
+        displayMovieResults(filtered.slice(0, defaultLimit));
+    } else if (varName.includes('low')) {
+        const filtered = loadedData.movies.filter(m => m.rating < 8.0);
+        displayMovieResults(filtered.slice(0, defaultLimit));
+    } else if (varName.includes('action')) {
+        const filtered = loadedData.movies.filter(m => m.genre.toLowerCase() === 'action');
+        displayMovieResults(filtered.slice(0, defaultLimit));
+    } else if (varName.includes('drama')) {
+        const filtered = loadedData.movies.filter(m => m.genre.toLowerCase() === 'drama');
+        displayMovieResults(filtered.slice(0, defaultLimit));
+    } else if (varName.includes('scifi') || varName.includes('sci_fi') || varName.includes('sci-fi')) {
+        const filtered = loadedData.movies.filter(m => m.genre.toLowerCase() === 'sci-fi');
+        displayMovieResults(filtered.slice(0, defaultLimit));
     } else if (varName.includes('genre') || varName.includes('group')) {
         displayGenreGroup();
     } else if (varName.includes('year')) {
         displayYearGroup();
     } else if (varName.includes('director')) {
         displayDirectorResults();
+    } else if (varName.includes('nolan')) {
+        const filtered = loadedData.movies.filter(m => m.director.toLowerCase().includes('nolan'));
+        displayMovieResults(filtered.slice(0, defaultLimit));
+    } else if (varName.includes('sorted') || varName.includes('order')) {
+        // For sorted results, show based on variable name patterns
+        if (varName.includes('rating')) {
+            const sorted = [...loadedData.movies].sort((a, b) => b.rating - a.rating);
+            displayMovieResults(sorted.slice(0, defaultLimit));
+        } else if (varName.includes('revenue')) {
+            const sorted = [...loadedData.movies].sort((a, b) => b.revenue - a.revenue);
+            displayRevenueResults(sorted.slice(0, defaultLimit));
+        } else if (varName.includes('year')) {
+            const sorted = [...loadedData.movies].sort((a, b) => b.year - a.year);
+            displayMovieResults(sorted.slice(0, defaultLimit));
+        } else {
+            displayMovieResults(loadedData.movies.slice(0, defaultLimit));
+        }
     } else if (varName.includes('revenue') || varName.includes('top')) {
-        const sorted = [...loadedData.movies].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
-        displayRevenueResults(sorted);
+        const sorted = [...loadedData.movies].sort((a, b) => b.revenue - a.revenue);
+        displayRevenueResults(sorted.slice(0, defaultLimit));
+    } else if (varName.includes('limit') || varName.includes('first') || varName.includes('sample')) {
+        displayMovieResults(loadedData.movies.slice(0, defaultLimit));
     } else {
-        displayMovieResults(loadedData.movies.slice(0, 5));
+        // Default: show reasonable number of results
+        displayMovieResults(loadedData.movies.slice(0, defaultLimit));
     }
 }
 
