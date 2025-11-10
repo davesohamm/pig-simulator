@@ -328,19 +328,49 @@ function handleForeachCommand(cmd) {
             return;
         }
         
-        // For now, handle common patterns
         // Check if it's a GROUP aggregation
-        if (fields.toLowerCase().includes('count(') || fields.toLowerCase().includes('avg(') || fields.toLowerCase().includes('max(') || fields.toLowerCase().includes('min(')) {
+        if (fields.toLowerCase().includes('count(') || fields.toLowerCase().includes('avg(') || fields.toLowerCase().includes('max(') || fields.toLowerCase().includes('min(') || fields.toLowerCase().includes('sum(')) {
             // This is aggregation on grouped data
             const result = executeForeachAggregation(sourceData, fields);
             variables[targetVar] = result;
         } else {
-            // Simple projection - just pass through (simplified)
-            variables[targetVar] = sourceData;
+            // Simple projection - extract specific fields
+            const result = executeForeachProjection(sourceData, fields);
+            variables[targetVar] = result;
         }
     }
     
     appendOutput('OK\n', 'success');
+}
+
+function executeForeachProjection(data, fields) {
+    // Parse field list: field1, field2, field3 or field1 AS alias1, field2 AS alias2
+    const fieldList = fields.split(',').map(f => f.trim().replace(/;$/, ''));
+    
+    return data.map(row => {
+        const newRow = {};
+        
+        fieldList.forEach(fieldExpr => {
+            // Check if there's an AS alias
+            const asMatch = fieldExpr.match(/(.+)\s+as\s+(\w+)/i);
+            if (asMatch) {
+                const [, field, alias] = asMatch;
+                const fieldName = field.trim();
+                newRow[alias] = row[fieldName];
+            } else {
+                // No alias, use field name as is
+                const fieldName = fieldExpr.trim();
+                if (fieldName === '*') {
+                    // Copy all fields
+                    Object.assign(newRow, row);
+                } else {
+                    newRow[fieldName] = row[fieldName];
+                }
+            }
+        });
+        
+        return newRow;
+    });
 }
 
 function executeForeachAggregation(groupedData, fields) {
@@ -509,12 +539,20 @@ function displayMovieResults(movies) {
     
     movies.forEach(movie => {
         // Check if it's a full movie record or just selected fields
-        if (movie.id !== undefined && movie.title !== undefined) {
+        if (movie.id !== undefined && movie.title !== undefined && movie.year !== undefined) {
+            // Full movie record
             appendOutput(`(${movie.id},${movie.title},${movie.year},${movie.rating},${movie.genre},${movie.director},${movie.revenue})`, 'result-table');
         } else {
-            // Custom format for other data
-            const values = Object.values(movie).join(',');
-            appendOutput(`(${values})`, 'result-table');
+            // Projected fields or other data
+            const keys = Object.keys(movie);
+            if (keys.length === 1) {
+                // Single field projection (like just genre or director)
+                appendOutput(`(${movie[keys[0]]})`, 'result-table');
+            } else {
+                // Multiple fields
+                const values = Object.values(movie).join(',');
+                appendOutput(`(${values})`, 'result-table');
+            }
         }
     });
     appendOutput('');
@@ -666,7 +704,58 @@ function handleJoinCommand(cmd) {
 
 function handleDistinctCommand(cmd) {
     appendOutput('2024-11-10 10:32:20,123 [main] INFO  org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.MapReduceLauncher - Processing DISTINCT operation', 'info');
+    
+    // Parse DISTINCT command: varname = DISTINCT source
+    const distinctMatch = cmd.match(/(\w+)\s*=\s*distinct\s+(\w+)/i);
+    if (distinctMatch) {
+        const [, targetVar, sourceVar] = distinctMatch;
+        const sourceData = variables[sourceVar];
+        
+        if (!sourceData) {
+            appendOutput(`ERROR: Variable '${sourceVar}' not found\n`, 'error');
+            return;
+        }
+        
+        // Remove duplicates
+        const distinct = executeDistinct(sourceData);
+        variables[targetVar] = distinct;
+    }
+    
     appendOutput('OK\n', 'success');
+}
+
+function executeDistinct(data) {
+    // If data is array of objects, check if they're single-field objects
+    if (!Array.isArray(data) || data.length === 0) {
+        return [];
+    }
+    
+    const seen = new Set();
+    const result = [];
+    
+    data.forEach(row => {
+        // Convert object to string for comparison
+        let key;
+        if (typeof row === 'object' && row !== null) {
+            // If it's a single-field object (from GENERATE), use that field
+            const keys = Object.keys(row);
+            if (keys.length === 1) {
+                key = row[keys[0]];
+            } else {
+                // For multi-field objects, serialize entire object
+                key = JSON.stringify(row);
+            }
+        } else {
+            key = row;
+        }
+        
+        if (!seen.has(key)) {
+            seen.add(key);
+            result.push(row);
+        }
+    });
+    
+    return result;
 }
 
 function showHelp() {

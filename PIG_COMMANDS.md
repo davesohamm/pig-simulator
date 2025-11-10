@@ -209,6 +209,7 @@ genres = FOREACH movies GENERATE genre;
 unique_genres = DISTINCT genres;
 DUMP unique_genres;
 ```
+**Shows all unique genres from the 100 movies (Action, Drama, Crime, Sci-Fi, etc.)**
 
 ### Get Unique Directors
 ```pig
@@ -216,6 +217,26 @@ directors = FOREACH movies GENERATE director;
 unique_directors = DISTINCT directors;
 DUMP unique_directors;
 ```
+**Shows all unique directors from the dataset**
+
+### Get Unique Years
+```pig
+years = FOREACH movies GENERATE year;
+unique_years = DISTINCT years;
+sorted_years = ORDER unique_years BY year ASC;
+DUMP sorted_years;
+```
+**Shows all unique release years, sorted chronologically**
+
+### Count Unique Genres
+```pig
+genres = FOREACH movies GENERATE genre;
+unique_genres = DISTINCT genres;
+genre_count = GROUP unique_genres ALL;
+total = FOREACH genre_count GENERATE COUNT(unique_genres);
+DUMP total;
+```
+**Counts how many unique genres exist in the dataset**
 
 ---
 
